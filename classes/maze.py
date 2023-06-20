@@ -74,6 +74,7 @@ class Maze:
         Returns:
             tuple: A tuple representing the next state, with (position, reward, terminal) values.
         """
+        
         # Unpack the state tuple into separate variables
         pos, reward, terminal = state
 
@@ -332,9 +333,18 @@ class Maze:
         print("TEMPORAL DIFFERENCE LEARNING COMPLETE")
 
         return self.policy_table
-        
     
-    def sarsa_control(self, num_episodes=1000, learning_rate=0.1, gamma=1, epsilon=0.1):
+    
+    def choose_action(self, state, epsilon=0.1):
+        
+        if random.uniform(0, 1) < epsilon:
+            action, q_value = random.choice([x for x in self.Q_values[state]])
+        else:
+            action, q_value = max([x for x in self.Q_values[state]], key=lambda x: x[1])
+        return action, q_value
+    
+    
+    def sarsa_control(self, num_episodes=1000, learning_rate=0.1, gamma=1, epsilon=0.1, start_state=None):
         """
         Perform SARSA control to learn the optimal policy.
 
@@ -350,7 +360,7 @@ class Maze:
         """
         
         # Randomly initialize Q-values for each state between 0 and 40
-        self.Q_values = {state: [(action, random.randint(0, 40)) for action in self.actions]
+        self.Q_values = {state: [(action, 0) for action in self.actions]
                         if state[2] == False else [(action, 0) for action in self.actions]
                         for state in self.states}
 
@@ -358,49 +368,37 @@ class Maze:
 
         for episode in range(num_episodes):
             # Randomly select an initial state
-            state = random.choice(self.states)
+            state = start_state
 
+            action, current_q_value = self.choose_action(state)
+            
             while True:
-                
+                               
                 # Break the loop if the current state is a terminal state
                 if state[2]:
                     break
-                
-                # Get the Q-values for the current state
-                all_Q_values = self.Q_values[state]
-
-                # Choose an action using epsilon-greedy exploration
-                if random.uniform(0, 1) < epsilon:
-                    action = random.choice([x[0] for x in all_Q_values])
-                else:
-                    action = max(all_Q_values, key=lambda x: x[1])[0]
-
+                            
                 # Take a step and observe the next state and reward
                 next_state = self.step(state, action)
                 reward = next_state[1]
-
-                # Select the Q-value for the next state
-                q_value_next_state = random.choice([x[1] for x in self.Q_values[next_state]])
-
-                # Get the current Q-value for the chosen action
-                current_q_value = [x[1] for x in all_Q_values if x[0] == action][0]
-
+                
+                action_next_state, q_value_next_state = self.choose_action(next_state)
+                                                       
                 # Calculate the error (TD error)
                 error = reward + gamma * q_value_next_state - current_q_value
-
+                
                 # Update the Q-value for the current state-action pair
                 self.Q_values[state] = [(a, val + learning_rate * error) if a == action else (a, val) for a, val in self.Q_values[state]]
 
                 # Choose the action with the maximum value for the updated state
-                action, value = max(self.Q_values[state], key=lambda x: x[1])
-
-                # Update the policy table for the current state
-                self.policy_table[state] = action
+                action_policy, value = max(self.Q_values[state], key=lambda x: x[1])
+                self.policy_table[state] = action_policy
 
                 # Transition to the next state
                 state = next_state
-                
-                
+                action = action_next_state
+                current_q_value = q_value_next_state
+
         print("SARSA CONTROL COMPLETE")
 
         return self.policy_table

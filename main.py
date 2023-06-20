@@ -51,17 +51,18 @@ start_state = ((2, 3), -1, False)
 #                                    policy_table=policy_table, 
 #                                    starting_state=start_state)
 
-# print(f"SARSA CONTROL")
-# policy_table = maze.sarsa_control(num_episodes=10000, 
-#                                         learning_rate=0.1, 
-#                                         gamma=0.9, 
-#                                         epsilon=0.1)
+print(f"SARSA CONTROL")
+policy_table = maze.sarsa_control(num_episodes=200000, 
+                                        learning_rate=0.1, 
+                                        gamma=1, 
+                                        epsilon=0.1,
+                                        start_state=start_state)
 
-print(f"Q LEARNING")
-policy_table = maze.q_learning(num_episodes=10000, 
-                                        learning_rate=0.01, 
-                                        gamma=0.9, 
-                                        epsilon=0.1)
+# print(f"Q LEARNING")
+# policy_table = maze.q_learning(num_episodes=100000, 
+#                                         learning_rate=0.1, 
+#                                         gamma=1, 
+#                                         epsilon=0.1)
 
 # Create a policy object using the optimal policy table
 policy = Policy(policy_table)
@@ -102,7 +103,7 @@ print(f"FINAL STATE POSITION: {current_state[0]}")
 print(f"FINAL STATE REWARD  : {current_state[1]}")
 print(f"TOTAL REWARD: {agent.reward}") 
 
-pygame.time.delay(50000)
+pygame.time.delay(5000)
 
 # Quit pygame
 pygame.quit()
